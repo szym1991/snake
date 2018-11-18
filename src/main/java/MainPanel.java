@@ -1,7 +1,13 @@
+import ai.IInputValue;
+import ai.NeuralNetworkPopulation;
+import ai.SingleNeuralNetwork;
+import ai.input.InputValueFactory;
+import lombok.extern.slf4j.Slf4j;
 import matrix.Matrix;
 import matrix.MatrixObject;
 import matrix.SnakeBody;
 import position.*;
+import util.GeneralUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,11 +16,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+@Slf4j
 public class MainPanel extends JPanel implements ActionListener {
 
-    private static final boolean WITH_BORDER = false;
-    private static final int DELAY = 50;
+    private static final boolean WITH_BORDER = true;
+    private static final boolean PLAY_HUMAN = false;
+    private static final int DELAY = 5;
     private static final int MATRIX_SIZE = 40;
+    private static final double MIN_SCORE = -50.0;
 
     private static Timer timer;
 
@@ -26,8 +35,12 @@ public class MainPanel extends JPanel implements ActionListener {
     private Position startPosition;
     private CurrentPosition position;
     private PositionHandler positionHandler;
-    private Turn currentTurn;
+    private Direction currentDirection;
     private SnakeBody snakeBody;
+
+    private NeuralNetworkPopulation neuralNetworkPopulation;
+
+    private SingleNeuralNetwork currentNeuralNetwork;
 
     public MainPanel(int windowSize) {
         this.windowSize = windowSize;
@@ -37,12 +50,16 @@ public class MainPanel extends JPanel implements ActionListener {
         setFocusable(true);
 
         timer = new Timer(DELAY, this);
-        timer.start();
         int pos = MATRIX_SIZE / 2;
         this.startPosition = new Position(pos - 1, pos - 1);
         this.positionHandler = new PositionHandler(MATRIX_SIZE);
 
+        this.neuralNetworkPopulation = new NeuralNetworkPopulation();
+
         startGame();
+//        while (true) {
+//            actionPerformed(null);
+//        }
     }
 
     @Override
@@ -63,11 +80,24 @@ public class MainPanel extends JPanel implements ActionListener {
     }
 
     private void startGame() {
+        if (currentNeuralNetwork != null) {
+            log.info("Current network score: " + currentNeuralNetwork.getFinalScore());
+            if (currentNeuralNetwork.getFinalScore() > 2500) {
+                log.info(currentNeuralNetwork.toString());
+            }
+        }
         this.points = 0;
+        SingleNeuralNetwork next = neuralNetworkPopulation.getNext();
+        if (next == null) {
+            log.info("Generation: " + neuralNetworkPopulation.getGenerationNo());
+            neuralNetworkPopulation.newGeneration();
+            next = neuralNetworkPopulation.getNext();
+        }
+        this.currentNeuralNetwork = next;
         this.matrix = new Matrix(MATRIX_SIZE, WITH_BORDER);
         this.position = new CurrentPosition(startPosition.getX(), startPosition.getY());
         this.snakeBody = new SnakeBody(position);
-        this.currentTurn = Turn.RIGHT;
+        this.currentDirection = Direction.UP;
         Position foodPosition = FoodGenerator.getNextPosition(matrix);
         matrix.setCell(foodPosition.getX(), foodPosition.getY(), MatrixObject.FOOD);
         updateScore();
@@ -76,27 +106,61 @@ public class MainPanel extends JPanel implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        CurrentPosition currentPosition = positionHandler.changePosition(position, currentTurn);
-        boolean collision = CollisionDetector.detectCollision(matrix, currentPosition);
-        if (collision) {
-            timer.stop();
+        if (matrix == null) {
             return;
         }
-        if (matrix.getCell(currentPosition.getX(), currentPosition.getY()).isEatable()) {
+        double prevDistance = calculateDistance();
+        if (!PLAY_HUMAN) {
+            if (currentNeuralNetwork.getScore() < MIN_SCORE) {
+                startGame();
+            }
+            currentDirection = currentNeuralNetwork.calculate(prepareInput()).getBestDirection(currentDirection);
+        }
+        position = positionHandler.changePosition(position, currentDirection);
+        boolean collision = CollisionDetector.detectCollision(matrix, position);
+        if (collision) {
+            timer.stop();
+            startGame();
+            return;
+        }
+
+        double currentDistance = calculateDistance();
+        if (prevDistance - currentDistance > 0) {
+            currentNeuralNetwork.addScore(1);
+        } else {
+            currentNeuralNetwork.addScore(-1.5);
+        }
+
+        if (matrix.getCell(position.getX(), position.getY()).isEatable()) {
             snakeBody.makeBigger();
+            currentNeuralNetwork.addScore(10);
+            currentNeuralNetwork.incrementCollectedFoods();
             points++;
-            updateScore();
             Position foodPosition = FoodGenerator.getNextPosition(matrix);
             matrix.setCell(foodPosition.getX(), foodPosition.getY(), MatrixObject.FOOD);
         }
-        SnakeBodyDrawer.updateSnakeBodyAndMatrix(matrix, snakeBody, currentPosition);
+        SnakeBodyDrawer.updateSnakeBodyAndMatrix(matrix, snakeBody, position);
+        updateScore();
         this.repaint();
+    }
+
+    private IInputValue prepareInput() {
+//        return InputValueFactory.getBooleanInputValue(matrix, positionHandler, currentDirection, position);
+        return InputValueFactory.getInputBasedOnDistances(matrix, position, currentDirection);
+    }
+
+    private double calculateDistance() {
+        Position food = matrix.findFood();
+        if (food == null) {
+            return 100;
+        }
+        return GeneralUtils.calculateDistance(position, food);
     }
 
     private void updateScore() {
         Snake snake = (Snake) SwingUtilities.windowForComponent(this);
         if (snake != null) {
-            snake.setTitle(Snake.NAME + " - Score: " + points);
+            snake.setTitle(Snake.NAME + " - Score: " + points + " network score: " + currentNeuralNetwork.getScore());
         }
     }
 
@@ -105,25 +169,37 @@ public class MainPanel extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
 
-            if (key == KeyEvent.VK_LEFT && currentTurn != Turn.RIGHT) {
-                currentTurn = Turn.LEFT;
+            if (key == KeyEvent.VK_LEFT && currentDirection != Direction.RIGHT) {
+                currentDirection = Direction.LEFT;
             }
 
-            if (key == KeyEvent.VK_RIGHT && currentTurn != Turn.LEFT) {
-                currentTurn = Turn.RIGHT;
+            if (key == KeyEvent.VK_RIGHT && currentDirection != Direction.LEFT) {
+                currentDirection = Direction.RIGHT;
             }
 
-            if (key == KeyEvent.VK_UP && currentTurn != Turn.DOWN) {
-                currentTurn = Turn.UP;
+            if (key == KeyEvent.VK_UP && currentDirection != Direction.DOWN) {
+                currentDirection = Direction.UP;
             }
 
-            if (key == KeyEvent.VK_DOWN && currentTurn != Turn.UP) {
-                currentTurn = Turn.DOWN;
+            if (key == KeyEvent.VK_DOWN && currentDirection != Direction.UP) {
+                currentDirection = Direction.DOWN;
             }
 
             if (key == KeyEvent.VK_SPACE) {
                 startGame();
             }
+
+            if (key == KeyEvent.VK_P) {
+                pauseGame();
+            }
+        }
+    }
+
+    private void pauseGame() {
+        if (timer.isRunning()) {
+            timer.stop();
+        } else {
+            timer.start();
         }
     }
 

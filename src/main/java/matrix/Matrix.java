@@ -1,28 +1,33 @@
 package matrix;
 
+import lombok.Getter;
+import position.Position;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Matrix {
-    private int matrixSize;
+    @Getter
+    private int size;
+    @Getter
     private boolean withBorder;
     private List<List<MatrixObject>> matrix;
 
-    public Matrix(int matrixSize) {
-        this(matrixSize, false);
+    public Matrix(int size) {
+        this(size, false);
     }
 
-    public Matrix(int matrixSize, boolean withBorder) {
-        this.matrixSize = matrixSize;
+    public Matrix(int size, boolean withBorder) {
+        this.size = size;
         this.withBorder = withBorder;
         this.matrix = new ArrayList<>();
         fillEmptyMatrix();
     }
 
     private void fillEmptyMatrix() {
-        for (int i = 0; i < matrixSize; i++) {
+        for (int i = 0; i < size; i++) {
             List<MatrixObject> emptyPlaces = new ArrayList<>();
-            for (int j = 0; j < matrixSize; j++) {
+            for (int j = 0; j < size; j++) {
                 emptyPlaces.add(MatrixObject.EMPTY_PLACE);
             }
             matrix.add(emptyPlaces);
@@ -34,17 +39,21 @@ public class Matrix {
     }
 
     private void makeBorder() {
-        for (int i = 0; i < matrixSize; i++) {
-            if (i == 0 || i == matrixSize - 1) {
+        for (int i = 0; i < size; i++) {
+            if (i == 0 || i == size - 1) {
                 List<MatrixObject> borders = new ArrayList<>();
-                for (int j = 0; j < matrixSize; j++) {
+                for (int j = 0; j < size; j++) {
                     borders.add(MatrixObject.OBSTACLE);
                 }
                 matrix.add(i, borders);
             }
             matrix.get(i).add(0, MatrixObject.OBSTACLE);
-            matrix.get(i).add(matrixSize - 1, MatrixObject.OBSTACLE);
+            matrix.get(i).add(size - 1, MatrixObject.OBSTACLE);
         }
+    }
+
+    public MatrixObject getCell(Position position) {
+        return matrix.get(position.getX()).get(position.getY());
     }
 
     public MatrixObject getCell(int x, int y) {
@@ -59,7 +68,14 @@ public class Matrix {
         matrix.get(x).set(y, object);
     }
 
-    public int getSize() {
-        return matrixSize;
+    public Position findFood() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (matrix.get(i).get(j).isEatable()) {
+                    return new Position(i, j);
+                }
+            }
+        }
+        return null;
     }
 }

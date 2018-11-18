@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SnakeBody {
-    private final static Integer START_LENGTH = 3;
+    private final static Integer START_LENGTH = 5;
 
     private List<Position> snakeParts;
 
@@ -30,7 +30,7 @@ public class SnakeBody {
         size++;
     }
 
-    public Position getHead(){
+    public Position getHead() {
         if (snakeParts.size() != 0) {
             return snakeParts.get(snakeParts.size() - 1);
         }

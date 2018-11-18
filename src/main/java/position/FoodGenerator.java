@@ -6,8 +6,9 @@ import java.util.Random;
 
 public class FoodGenerator {
     private static final Random RANDOM = new Random();
+
     public static Position getNextPosition(Matrix matrix) {
-        int size = matrix.getSize();
+        int size = matrix.isWithBorder() ? matrix.getSize() - 1 : matrix.getSize();
         Position position = getRandomPosition(size);
         while (matrix.getCell(position.getX(), position.getY()).isCollide()) {
             position = getRandomPosition(size);
