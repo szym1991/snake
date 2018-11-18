@@ -9,7 +9,7 @@ import java.util.List;
 
 public class NeuralNetworkPopulation {
 
-    private static final int POPULATION_SIZE = 55;
+    private int populationSize;
 
     @Getter
     private int generationNo;
@@ -19,10 +19,11 @@ public class NeuralNetworkPopulation {
 
     private List<SingleNeuralNetwork> neuralNetworks;
 
-    public NeuralNetworkPopulation() {
+    public NeuralNetworkPopulation(int populationSize) {
+        this.populationSize = populationSize;
         generationNo = 1;
         neuralNetworks = new ArrayList<>();
-        for (int i = 0; i < POPULATION_SIZE; i++) {
+        for (int i = 0; i < this.populationSize; i++) {
             neuralNetworks.add(new SingleNeuralNetwork());
         }
 
@@ -39,7 +40,7 @@ public class NeuralNetworkPopulation {
     public void newGeneration() {
         List<SingleNeuralNetwork> newGen = new ArrayList<>();
         neuralNetworks.sort(SingleNeuralNetwork::compareTo);
-        for (int i = 0; i < POPULATION_SIZE / 10; i++) {
+        for (int i = 0; i < populationSize / 10; i++) {
             if (neuralNetworks.get(i).getFinalScore() > 0) {
                 newGen.add(neuralNetworks.get(i));
             }
@@ -47,7 +48,7 @@ public class NeuralNetworkPopulation {
         if (newGen.isEmpty()) {
             newGen.add(new SingleNeuralNetwork());
         }
-        while (newGen.size() < POPULATION_SIZE) {
+        while (newGen.size() < populationSize) {
             SingleNeuralNetwork first = newGen.get(GeneralUtils.randomValue(newGen.size()));
             SingleNeuralNetwork second = newGen.get(GeneralUtils.randomValue(newGen.size()));
             newGen.add(NeuralNetworkMutator.breed(first, second));

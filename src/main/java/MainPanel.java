@@ -1,7 +1,7 @@
 import ai.IInputValue;
-import ai.NeuralNetworkPopulation;
 import ai.SingleNeuralNetwork;
 import ai.input.InputValueFactory;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import matrix.Matrix;
 import matrix.MatrixObject;
@@ -15,17 +15,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.function.Consumer;
 
 @Slf4j
 public class MainPanel extends JPanel implements ActionListener {
 
     private static final boolean WITH_BORDER = true;
     private static final boolean PLAY_HUMAN = false;
-    private static final int DELAY = 5;
+    private static final int DELAY = 50;
     private static final int MATRIX_SIZE = 40;
     private static final double MIN_SCORE = -50.0;
 
-    private static Timer timer;
+    private Timer timer;
 
     private Matrix matrix;
     private int cellSize;
@@ -38,13 +39,14 @@ public class MainPanel extends JPanel implements ActionListener {
     private Direction currentDirection;
     private SnakeBody snakeBody;
 
-    private NeuralNetworkPopulation neuralNetworkPopulation;
-
+    @Getter
     private SingleNeuralNetwork currentNeuralNetwork;
+    Consumer<MainPanel> endGame;
 
-    public MainPanel(int windowSize) {
+    public MainPanel(int windowSize, Consumer<MainPanel> endGame) {
         this.windowSize = windowSize;
         this.cellSize = windowSize / MATRIX_SIZE;
+        this.endGame = endGame;
 
         addKeyListener(new Adapter());
         setFocusable(true);
@@ -54,12 +56,7 @@ public class MainPanel extends JPanel implements ActionListener {
         this.startPosition = new Position(pos - 1, pos - 1);
         this.positionHandler = new PositionHandler(MATRIX_SIZE);
 
-        this.neuralNetworkPopulation = new NeuralNetworkPopulation();
 
-        startGame();
-//        while (true) {
-//            actionPerformed(null);
-//        }
     }
 
     @Override
@@ -79,21 +76,12 @@ public class MainPanel extends JPanel implements ActionListener {
         }
     }
 
-    private void startGame() {
-        if (currentNeuralNetwork != null) {
-            log.info("Current network score: " + currentNeuralNetwork.getFinalScore());
-            if (currentNeuralNetwork.getFinalScore() > 2500) {
-                log.info(currentNeuralNetwork.toString());
-            }
-        }
+    public void startGame(SingleNeuralNetwork singleNeuralNetwork) {
         this.points = 0;
-        SingleNeuralNetwork next = neuralNetworkPopulation.getNext();
-        if (next == null) {
-            log.info("Generation: " + neuralNetworkPopulation.getGenerationNo());
-            neuralNetworkPopulation.newGeneration();
-            next = neuralNetworkPopulation.getNext();
+        this.currentNeuralNetwork = singleNeuralNetwork;
+        if (currentNeuralNetwork == null) {
+            return;
         }
-        this.currentNeuralNetwork = next;
         this.matrix = new Matrix(MATRIX_SIZE, WITH_BORDER);
         this.position = new CurrentPosition(startPosition.getX(), startPosition.getY());
         this.snakeBody = new SnakeBody(position);
@@ -103,6 +91,10 @@ public class MainPanel extends JPanel implements ActionListener {
         updateScore();
         timer.start();
         repaint();
+
+//        while (true) {
+//            actionPerformed(null);
+//        }
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -111,8 +103,10 @@ public class MainPanel extends JPanel implements ActionListener {
         }
         double prevDistance = calculateDistance();
         if (!PLAY_HUMAN) {
+
             if (currentNeuralNetwork.getScore() < MIN_SCORE) {
-                startGame();
+                timer.stop();
+                endGame.accept(this);
             }
             currentDirection = currentNeuralNetwork.calculate(prepareInput()).getBestDirection(currentDirection);
         }
@@ -120,7 +114,7 @@ public class MainPanel extends JPanel implements ActionListener {
         boolean collision = CollisionDetector.detectCollision(matrix, position);
         if (collision) {
             timer.stop();
-            startGame();
+            endGame.accept(this);
             return;
         }
 
@@ -186,7 +180,7 @@ public class MainPanel extends JPanel implements ActionListener {
             }
 
             if (key == KeyEvent.VK_SPACE) {
-                startGame();
+                startGame(currentNeuralNetwork);
             }
 
             if (key == KeyEvent.VK_P) {
