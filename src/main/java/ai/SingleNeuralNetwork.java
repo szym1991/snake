@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Single neural network
+ */
 public class SingleNeuralNetwork implements Comparable, Serializable {
 
     private static final int NUMBER_OF_INPUTS = 6;
@@ -26,6 +29,10 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
     private Integer moves;
     private Integer collectedFoods;
 
+    /**
+     * New single instance of neural network
+     * based on random weights between neurons
+     */
     public SingleNeuralNetwork() {
         score = 0.0;
         moves = 0;
@@ -66,6 +73,11 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
         setRandomOutputLayerWeight();
     }
 
+    /**
+     * New neural network from existed
+     *
+     * @param weights weights saved in String
+     */
     public SingleNeuralNetwork(String weights) {
         this();
         String[] split = weights.split(",");
@@ -102,6 +114,12 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
         }
     }
 
+    /**
+     * Calculates output value based on input
+     *
+     * @param inputValue implementation of {@link IInputValue}
+     * @return output values
+     */
     public OutputValue calculate(IInputValue inputValue) {
         ann.setInput(inputValue.getValues());
         ann.calculate();
@@ -110,29 +128,57 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
         return new OutputValue(output);
     }
 
+    /**
+     * Adds score
+     * WARNING! score to add can be negative value
+     *
+     * @param scoreToAdd scoreToAdd
+     */
     public void addScore(double scoreToAdd) {
         score += scoreToAdd;
         moves++;
     }
 
+    /**
+     * Increments collected food counter
+     */
     public void incrementCollectedFoods() {
         collectedFoods++;
     }
 
+    /**
+     * Reset score
+     */
     public void clearScore() {
         score = 0.0;
         moves = 0;
         collectedFoods = 0;
     }
 
+    /**
+     * Gets final score
+     *
+     * @return final score
+     */
     public Double getFinalScore() {
         return score + moves * 10 + collectedFoods * 10000;
     }
 
+    /**
+     * Clones instance
+     *
+     * @return cloned instance
+     */
     public SingleNeuralNetwork clone() {
         return SerializationUtils.clone(this);
     }
 
+    /**
+     * Changes weight on specified connection
+     *
+     * @param weightIndex connection's index
+     * @param weight      weight
+     */
     public void changeInputWeight(int weightIndex, double weight) {
         int numberOfConnections = getNumberOfConnections();
         if (weightIndex >= numberOfConnections) {
@@ -142,6 +188,11 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
 
     }
 
+    /**
+     * Gets all connections in neural network
+     *
+     * @return list of connections
+     */
     public List<Connection> getAllConnections() {
         List<Connection> connections = new ArrayList<>();
         Layer hiddenLayer = ann.getLayerAt(1);
@@ -154,6 +205,11 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
         return connections;
     }
 
+    /**
+     * Gets number of connections
+     *
+     * @return number of connections
+     */
     public int getNumberOfConnections() {
         return getAllConnections().size();
     }

@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * Input based on boolean values
+ */
 @Getter
 @Builder
 @AllArgsConstructor

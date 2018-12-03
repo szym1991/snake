@@ -1,6 +1,7 @@
 import ai.IInputValue;
 import ai.SingleNeuralNetwork;
 import ai.input.InputValueFactory;
+import ai.input.InputValueGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import matrix.Matrix;
@@ -139,8 +140,8 @@ public class MainPanel extends JPanel implements ActionListener {
     }
 
     private IInputValue prepareInput() {
-//        return InputValueFactory.getBooleanInputValue(matrix, positionHandler, currentDirection, position);
-        return InputValueFactory.getInputBasedOnDistances(matrix, position, currentDirection);
+        return InputValueFactory.generateInputValues(InputValueGenerator.INPUT_VALUE_BASED_ON_DISTANCES,
+                matrix, positionHandler, currentDirection, position);
     }
 
     private double calculateDistance() {

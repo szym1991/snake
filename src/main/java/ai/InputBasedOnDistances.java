@@ -3,6 +3,9 @@ package ai;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+/**
+ * Input based on distances
+ */
 @Builder
 @AllArgsConstructor
 public class InputBasedOnDistances implements IInputValue {

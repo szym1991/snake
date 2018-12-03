@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Population of neural network used in genetic algorithm
+ */
 public class NeuralNetworkPopulation {
 
     private int populationSize;
@@ -19,6 +22,11 @@ public class NeuralNetworkPopulation {
 
     private List<SingleNeuralNetwork> neuralNetworks;
 
+    /**
+     * Creates population based on {@link SingleNeuralNetwork}
+     *
+     * @param populationSize size of population
+     */
     public NeuralNetworkPopulation(int populationSize) {
         this.populationSize = populationSize;
         generationNo = 1;
@@ -30,6 +38,11 @@ public class NeuralNetworkPopulation {
         iterator = neuralNetworks.iterator();
     }
 
+    /**
+     * Gets next not used neural network in population
+     *
+     * @return neural network
+     */
     public SingleNeuralNetwork getNext() {
         if (iterator.hasNext()) {
             return iterator.next();
@@ -37,6 +50,11 @@ public class NeuralNetworkPopulation {
         return null;
     }
 
+    /**
+     * Creates new generation.
+     * Gets 1/10th best neural networks and adds to new generation.
+     * Fills the rest of generation by mutate best neural network using {@link NeuralNetworkMutator}
+     */
     public void newGeneration() {
         List<SingleNeuralNetwork> newGen = new ArrayList<>();
         neuralNetworks.sort(SingleNeuralNetwork::compareTo);
@@ -59,6 +77,9 @@ public class NeuralNetworkPopulation {
         generationNo++;
     }
 
+    /**
+     * Clears score in all neural network in population
+     */
     public void clearScore() {
         for (SingleNeuralNetwork neuralNetwork : neuralNetworks) {
             neuralNetwork.clearScore();

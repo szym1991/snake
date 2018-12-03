@@ -6,14 +6,31 @@ import util.GeneralUtils;
 
 import java.util.List;
 
+/**
+ * Mutator for neural network
+ */
 @UtilityClass
 public class NeuralNetworkMutator {
 
+    /**
+     * Breeds neural network based on two others from previous generation
+     *
+     * @param first  first neural network
+     * @param second second neural network
+     * @return new neural network
+     */
     public static SingleNeuralNetwork breed(SingleNeuralNetwork first, SingleNeuralNetwork second) {
         SingleNeuralNetwork crossover = crossover(first, second);
         return mutate(crossover);
     }
 
+    /**
+     * Mutates neural network
+     * Changes 1/4th weights on network
+     *
+     * @param network input network
+     * @return network with changes weights
+     */
     public static SingleNeuralNetwork mutate(SingleNeuralNetwork network) {
         SingleNeuralNetwork ann = network.clone();
         int numberOfConnections = ann.getNumberOfConnections();
@@ -25,6 +42,13 @@ public class NeuralNetworkMutator {
         return ann;
     }
 
+    /**
+     * Gets neural network based on crossed two previous ones
+     *
+     * @param first  first neural network
+     * @param second second neural network
+     * @return new neural network
+     */
     public static SingleNeuralNetwork crossover(SingleNeuralNetwork first, SingleNeuralNetwork second) {
         SingleNeuralNetwork clone = first.clone();
         List<Connection> secondAllConnections = second.getAllConnections();
