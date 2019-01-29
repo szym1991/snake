@@ -60,11 +60,10 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
         ann = new NeuralNetwork();
         ann.addLayer(0, inputLayer);
         ann.addLayer(1, hiddenLayerOne);
-        ConnectionFactory.fullConnect(ann.getLayerAt(0), ann.getLayerAt(1));
         ann.addLayer(2, outputLayer);
+        ConnectionFactory.fullConnect(ann.getLayerAt(0), ann.getLayerAt(1));
         ConnectionFactory.fullConnect(ann.getLayerAt(1), ann.getLayerAt(2));
-        ConnectionFactory.fullConnect(ann.getLayerAt(0),
-                ann.getLayerAt(ann.getLayersCount() - 1), false);
+
         ann.setInputNeurons(inputLayer.getNeurons());
         ann.setOutputNeurons(outputLayer.getNeurons());
 
@@ -120,12 +119,14 @@ public class SingleNeuralNetwork implements Comparable, Serializable {
      * @param inputValue implementation of {@link IInputValue}
      * @return output values
      */
-    public OutputValue calculate(IInputValue inputValue) {
+    public IOutputValue calculate(IInputValue inputValue) {
         ann.setInput(inputValue.getValues());
         ann.calculate();
 
         double[] output = ann.getOutput();
-        return new OutputValue(output);
+        IOutputValue outputValue = new OutputValue();
+        outputValue.generate(output);
+        return outputValue;
     }
 
     /**

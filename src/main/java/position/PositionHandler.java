@@ -1,5 +1,7 @@
 package position;
 
+import matrix.Matrix;
+
 public class PositionHandler {
     private int matrixSize;
 
@@ -42,5 +44,11 @@ public class PositionHandler {
                 break;
         }
         return position;
+    }
+
+    public static boolean isOutsideMatrix(Position position, Matrix matrix) {
+        int size = matrix.getSize();
+        return position.getX() < 0 || position.getX() >= size
+                || position.getY() < 0 || position.getY() >= size;
     }
 }

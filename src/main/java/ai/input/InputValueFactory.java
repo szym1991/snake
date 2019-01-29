@@ -23,6 +23,8 @@ public class InputValueFactory {
                         position);
             case INPUT_VALUE_BASED_ON_DISTANCES:
                 return DistancesInputValueGenerator.getInputBasedOnDistances(matrix, position, currentDirection);
+            case ULTIMATE_INPUT_VALUE:
+                return UltimateInputValueGenerator.getInputValue(matrix, positionHandler, position);
         }
         return null;
     }

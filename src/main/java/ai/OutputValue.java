@@ -1,25 +1,19 @@
 package ai;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import position.Direction;
 
 /**
  * Output for neural network
  */
 @Getter
-public class OutputValue {
+@NoArgsConstructor
+public class OutputValue implements IOutputValue {
 
     private double goAhead;
     private double turnLeft;
     private double turnRight;
-
-    public OutputValue(double[] outputValues) {
-        if (outputValues.length == 3) {
-            this.goAhead = outputValues[0];
-            this.turnLeft = outputValues[1];
-            this.turnRight = outputValues[2];
-        }
-    }
 
     /**
      * Gets best direction based on current direction
@@ -42,5 +36,14 @@ public class OutputValue {
         }
 
         return currentDirection;
+    }
+
+    @Override
+    public void generate(double[] outputValues) {
+        if (outputValues.length == 3) {
+            this.goAhead = outputValues[0];
+            this.turnLeft = outputValues[1];
+            this.turnRight = outputValues[2];
+        }
     }
 }

@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 public class Snake extends JFrame {
 
     private static final int VIEWS_NUMBER = 55;
+    private static final int COLS_NUMBER = 11;
     private static final Integer WINDOW_SIZE = 100;
     public static final String NAME = "Snake";
 
@@ -22,7 +23,9 @@ public class Snake extends JFrame {
         neuralNetworkHandler = new NeuralNetworkHandler();
         panel = new JPanel();
         games = new ArrayList<>();
-        panel.setLayout(new GridLayout(5, 11));
+        int rows = (int) Math.ceil(VIEWS_NUMBER / COLS_NUMBER);
+        int cols = VIEWS_NUMBER > COLS_NUMBER ? COLS_NUMBER : VIEWS_NUMBER;
+        panel.setLayout(new GridLayout(rows, cols));
         setContentPane(panel);
         prepareGame();
         startGame();

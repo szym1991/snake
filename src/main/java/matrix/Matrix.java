@@ -6,6 +6,15 @@ import position.Position;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ---------> Y
+ * |
+ * |
+ * |
+ * |
+ * \/
+ * X
+ */
 public class Matrix {
     @Getter
     private int size;
